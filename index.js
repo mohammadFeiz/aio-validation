@@ -318,81 +318,75 @@ function AIOValidation(props) {
           return $$.getError1(message);
         }
 
-        if (type === 'is' && value === target) {
-          return $$.getErrorC(target, '-', message);
-        }
-
-        if (type === 'is not' && value !== target) {
-          return $$.getErrorC(target, '+', message);
-        }
-
-        if (type === 'is in' && target.indexOf(value) !== -1) {
-          return $$.getErrorD(value, message);
-        }
-
-        if (type === 'is not in' && target.indexOf(value) === -1) {
-          return $$.getErrorD(value, message);
-        }
-
-        if (type === 'less-date') {
-          if (dateCalc.isLess(value, target)) {
-            return $$.getErrorA(target, 'l', 'date', message);
+        if (type === '=') {
+          if (Array.isArray(target)) {
+            if (target.indexOf(value) !== -1) {
+              return $$.getErrorD(value, message);
+            }
+          } else if (typeof value === 'string') {
+            if (value.indexOf('/') !== -1) {
+              if (dateCalc.isEqual(value, target)) {
+                return $$.getErrorA(target, 'e', 'date', message);
+              }
+            } else if (typeof target === 'number') {
+              if (value.length === target) {
+                return $$.getErrorA(target, 'e', 'string', message);
+              }
+            } else if (typeof target === 'string') {
+              if (value === target) {
+                return $$.getErrorC(target, '-', message);
+              }
+            }
+          } else if (Array.isArray(value) && typeof target === 'number') {
+            if (value.length === target) {
+              return $$.getErrorA(target, 'e', 'list', message);
+            }
+          } else if (value === target) {
+            return $$.getErrorC(target, '-', message);
           }
-        }
-
-        if (type === 'equal-date') {
-          if (dateCalc.isEqual(value, target)) {
-            return $$.getErrorA(target, 'e', 'date', message);
+        } else if (type === '!=') {
+          if (Array.isArray(target)) {
+            if (target.indexOf(value) === -1) {
+              return $$.getErrorD(value, message);
+            }
+          } else if (value !== target) {
+            return $$.getErrorC(target, '+', message);
           }
-        }
-
-        if (type === 'greater-date') {
-          if (dateCalc.isGreater(value, target)) {
-            return $$.getErrorA(target, 'g', 'date', message);
+        } else if (type === '<') {
+          if (Array.isArray(value)) {
+            if (value.length < target) {
+              return $$.getErrorA(target, 'l', 'list', message);
+            }
+          } else if (typeof value === 'number') {
+            if (value < target) {
+              return $$.getErrorA(target, 'l', 'number', message);
+            }
+          } else if (typeof value === 'string') {
+            if (value.indexOf('/') !== -1 && dateCalc.isLess(value, target)) {
+              return $$.getErrorA(target, 'l', 'date', message);
+            } else if (value.length < target) {
+              return $$.getErrorA(target, 'l', 'string', message);
+            }
           }
-        }
-
-        if (Array.isArray(value)) {
-          if (type === 'equal' && value.length === target) {
-            return $$.getErrorA(target, 'e', 'list', message);
-          }
-
-          if (type === 'less' && value.length < target) {
-            return $$.getErrorA(target, 'l', 'list', message);
-          }
-
-          if (type === 'greater' && value.length > target) {
-            return $$.getErrorA(target, 'g', 'list', message);
-          }
-        }
-
-        if (typeof value === 'number') {
-          if (type === 'equal' && value === target) {
-            return $$.getErrorA(target, 'e', 'number', message);
-          }
-
-          if (type === 'less' && value < target) {
-            return $$.getErrorA(target, 'l', 'number', message);
-          }
-
-          if (type === 'greater' && value > target) {
-            return $$.getErrorA(target, 'g', 'number', message);
+        } else if (type === '>') {
+          if (Array.isArray(value)) {
+            if (value.length > target) {
+              return $$.getErrorA(target, 'g', 'list', message);
+            }
+          } else if (typeof value === 'number') {
+            if (value > target) {
+              return $$.getErrorA(target, 'g', 'number', message);
+            }
+          } else if (typeof value === 'string') {
+            if (value.indexOf('/') !== -1 && dateCalc.isGreater(value, target)) {
+              return $$.getErrorA(target, 'g', 'date', message);
+            } else if (value.length > target) {
+              return $$.getErrorA(target, 'g', 'string', message);
+            }
           }
         }
 
         if (typeof value === 'string') {
-          if (type === 'equal' && value.length === target) {
-            return $$.getErrorA(target, 'e', 'string', message);
-          }
-
-          if (type === 'less' && value.length < target) {
-            return $$.getErrorA(target, 'l', 'string', message);
-          }
-
-          if (type === 'greater' && value.length > target) {
-            return $$.getErrorA(target, 'g', 'string', message);
-          }
-
           if (type === 'contain') {
             if (target === 'symbol') {
               var format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
