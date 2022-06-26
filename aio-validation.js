@@ -1,236 +1,182 @@
 export default function AIOValidation(props) {
   let dateCalc = DateCalculator();
   let $$ = {
-    getErrorA(target,operaetor,type,message){
+    translate(text){
+      if(!text){return text}
       let {lang} = props;
-      if(message){return message(target)}
-      return $$['getErrorA_' + lang](target,operaetor,type)
-    },
-    getErrorA_fa(target,operator,type){
-      let {label,translate} = props;
-      let error=label;error+=' ';
-      if(type === 'date'){
-        if(operator === 'l'){error+='نمی تواند قبل از';}
-        if(operator === 'g'){error+='نمی تواند بعد از';}
-        if(operator === 'e'){error+='نمی تواند برابر';}
-        error+=' ';error+=translate(target);error+=' ';
-        error+='باشد';return error
+      let dict = {
+        'should be contain':'باید شامل','should be before':'باید قبل از','cannot be after':'نمی تواند بعد از',
+        'should be after':'باید بعد از','cannot be before':'نمی تواند قبل از','should not be contain':'نمی تواند شامل',
+        'should be less than':'باید کمتر از','should be more than':'باید بیشتر از','could not be more than':'باید کمتر یا برابر',
+        'could not be less than':'باید بیشتر یا برابر','character(s)':'کاراکتر',
+        'item(s)':'مورد','should be equal':'','cannot be equal':'نمی تواند برابر'
       }
+      return lang === 'fa'?dict[text]:text
+    },
+    getMessage(target,{be,validation,unit = ''}){
+      if(validation.message){return validation.message}
+      let {targetPresentation = JSON.stringify(target),title = props.title} = validation;
+      return `${title} ${this.translate(be)} ${targetPresentation} ${unit}` + (props.lang === 'fa'?' باشد':'')
+    },
+    contain(target,validation,value){
+      let config = {be:'should be contain',validation};
+      if(target === 'number'){
+        if(!/\d/.test(value)){return this.getMessage('number',config)}
+      }
+      else if(target === 'letter'){
+        if(!/[a-zA-Z]/.test(value)){return this.getMessage('letter',config)}  
+      }  
+      else if(target === 'uppercase'){
+        if(!/[A-Z]/.test(value)){return this.getMessage('uppercase',config)}
+      }    
+      else if(target === 'lowercase'){
+        if(!/[a-z]/.test(value)){return this.getMessage('lowercase',config)}
+      }  
+      else if(target === 'symbol'){
+        if(!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(value)){
+          return this.getMessage('symbol',config)
+        }
+      }
+      else if(typeof target.test === 'function'){
+        if(!target.test(value)){return this.getMessage(target.toString(),config)}  
+      }
+      else{
+        if(value.indexOf(target) === -1 && target !== undefined){return this.getMessage(target,config)}
+      }
+    },
+    notContain(target,validation,value){
+      let config = {be:'should not be contain',validation};
+      if(target === 'number'){
+        if(/\d/.test(value)){return this.getMessage('number',config)}
+      }    
+      else if(target === 'letter'){
+        if(/[a-zA-Z]/.test(value)){return this.getMessage('letter',config)}  
+      }  
+      else if(target === 'uppercase'){
+        if(/[A-Z]/.test(value)){return this.getMessage('uppercase',config)}
+      }    
+      else if(target === 'lowercase'){
+        if(/[a-z]/.test(value)){return this.getMessage('lowercase',config)}
+      }
+      else if(target === 'symbol'){
+        if(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(value)){
+          return this.getMessage('symbol',config)
+        }
+      }
+      else if(typeof target.test === 'function'){
+        if(target.test(value)){return this.getMessage(target.toString(),config)}  
+      }    
       else {
-        if(operator === 'l'){error+='باید حداقل';}
-        if(operator === 'g'){error+='باید حداکثر';}
-        if(operator === 'e'){error+='نمی تواند';}
-        error+=' ';error+=translate(target);error+=' ';
-        if(type === 'list'){error+='مورد ';}
-        if(type === 'string'){error+='کاراکتر ';}
-        error+='باشد';return error
-      }
-    }, 
-    getErrorA_en(target,operator,type){
-      let {label,translate} = props;
-      let error=label;
-      if(type === 'date'){
-        if(operator === 'l'){error+=' connot be before ';}
-        if(operator === 'g'){error+=' cannot be after ';}
-        if(operator === 'e'){error+=' cannot be ';}
-        error+=translate(target);
-        return error
-      }
-      else {
-        if(operator === 'l'){error+=' should be at least ';}
-        if(operator === 'g'){error+=' should be a maximum of ';}
-        if(operator === 'e'){error+=' cannot be ';}
-        error+=translate(target);
-        if(type === 'list'){error+=' item';}
-        if(type === 'string'){error+=' character';}
-        return error
+        if(value.indexOf(target) !== -1){return this.getMessage(target,config)}
       }
     },
-    getError1(message){
-      let {lang} = props;
-      if(message){return message()}
-      return this['getError1_' + lang]()
+    length(target,validation,value,unit){
+      if(value.length !== target){return this.getMessage(target,{validation,be:'should be contain',unit})}
     },
-    getError1_fa(){let {label}=props;let str='';str+='وارد کردن';str+=' ';str+=label;str+=' ';str+='ضروری می باشد';return str;},
-    getError1_en(){let {label}=props;let str='';str+=label;str+=' is required';return str;},
-    getErrorB(target,type,message){
-      let {lang} = props;
-      if(message){return message(value)}
-      return $$['getErrorB_' + lang](target,type)
+    notLength(target,validation,value,unit){
+      if(value.length === target){return this.getMessage(target,{validation,be:'should not be contain',unit})}
     },
-    getErrorB_fa(target,type){
-      let {label,translate}=props;
-      let str='';str+=label;str+=' ';
-      if(type === '-'){str+='نباید شامل';}
-      if(type === '+'){str+='باید شامل';}
-      str+=' ';
-      if(target === 'symbol'){str += 'کاراگتر های خاص'}
-      else if(target === 'number'){str += 'عدد';}
-      else if(target === 'letter'){str += 'حروف'}
-      else if(target === 'uppercase'){str += 'حروف بزرگ'}
-      else if(target === 'lowercase'){str += 'حروف کوچک'}
-      else {str += translate(target);}
-      str+=' ';str += 'باشد';return str;
+    lengthLess(target,validation,value,unit){
+      if(value.length >= target){return this.getMessage(target,{validation,be:'should be less than',unit})}
     },
-    getErrorB_en(target,type){
-      let {label,translate}=props;
-      let str = label;
-      if(type === '-'){str+=' should not contain ';}
-      if(type === '+'){str+=' should contain ';}
-      if(target === 'symbol'){str += 'symbol'}
-      else if(target === 'number'){str += 'number';}
-      else if(target === 'letter'){str += 'letter'}
-      else if(target === 'uppercase'){str += 'uppercase'}
-      else if(target === 'lowercase'){str += 'lowercase'}
-      else {str += translate(target);}
-      return str;
+    lengthLessEqual(target,validation,value,unit){
+      if(value.length > target){return this.getMessage(target,{validation,be:'could not be more than',unit})}
     },
-    getErrorC(target,type,message){
-      let {lang} = props;
-      if(message){return message(target)}
-      return $$['getErrorC_' + lang](target,type)
+    lengthMore(target,validation,value,unit){
+      if(value.length <= target){return this.getMessage(target,{validation,be:'should be more than',unit})}
     },
-    getErrorC_fa(target,type){
-      let {label,translate}=props; 
-      let str=label;str+=' ';
-      if(type === '-'){str+='نباید ';}
-      if(type === '+'){str+='باید ';}
-      str+=translate(target);str+=' ';str+='باشد';return str;
+    lengthMoreEqual(target,validation,value,unit){
+      if(value.length < target){return this.getMessage(target,{validation,be:'could not be less than',unit})}
     },
-    getErrorC_en(target,type){
-      let {label,translate}=props;
-      let str=label;
-      if(type === '-'){str+=' cannot be ';}
-      if(type === '+'){str+=' should be ';}
-      str+=translate(target);return str;
+    equal(target,validation,value){
+      if(JSON.stringify(value) !== JSON.stringify(target)){
+        return this.getMessage(target,{validation,be:'should be equal'})
+      }
     },
-    getErrorD(value,message){
-      let {lang} = props;
-      if(message){return message(value)}
-      return $$['getErrorD_' + lang](value)
+    not(target,validation,value){
+      if(JSON.stringify(value) === JSON.stringify(target)){
+        return this.getMessage(target,{validation,be:'cannot be equal'})
+      }
     },
-    getErrorD_en(value){
-      let {label}=props;
-      let str = label;
-      str += ' cannot be ';
-      str += value;
-      return str;
+    dateLess(target,validation,value){
+      if(dateCalc.isGreater(value,target) || dateCalc.isEqual(value,target)){
+        return this.getMessage(target,{validation,be:'should be before'})
+      }
     },
-    getErrorD_fa(value){
-      let {label}=props;
-      let str = label;
-      str += ' نمیتواند ';
-      str += value;
-      str += ' باشد';
-      return str;
+    dateLessEqual(target,validation,value){
+      if(dateCalc.isGreater(value,target)){
+        return this.getMessage(target,{validation,be:'cannot be after'})
+      }
     },
-    getError(){
-      let {value,errors = []} = props; 
-      for(let i = 0; i < errors.length; i++){
-        let {type,target,message} = errors[i];
-        if(type === 'required' && (value === undefined || value === '' || value === false || value.length === 0)){return $$.getError1(message)}
-        if(type === '='){
-          if(Array.isArray(target)){
-            if(target.indexOf(value) !== -1){return $$.getErrorD(value,message)}
-          }
-          else if(typeof value === 'string'){
-            if(value.indexOf('/') !== -1){
-              if(dateCalc.isEqual(value,target)){return $$.getErrorA(target,'e','date',message)}
-            }
-            else if(typeof target === 'number'){
-              if(value.length === target){return $$.getErrorA(target,'e','string',message)}
-            }
-            else if(typeof target === 'string'){
-              if(value === target){return $$.getErrorC(target,'-',message)}
-            }
-          }
-          else if(Array.isArray(value) && typeof target === 'number'){
-            if(value.length === target){return $$.getErrorA(target,'e','list',message)}
-          }
-          else if(value === target){return $$.getErrorC(target,'-',message)}
+    dateMore(target,validation,value){
+      if(dateCalc.isLess(value,target) || dateCalc.isEqual(value,target)){
+        return this.getMessage(target,{validation,be:'should be after'})
+      }
+    },
+    dateMoreEqual(target,validation,value){
+      if(dateCalc.isLess(value,target)){
+        return this.getMessage(target,{validation,be:'cannot be before'})
+      }
+    },
+    less(target,validation,value){
+      if(value >= target){
+        return this.getMessage(target,{validation,be:'should be less than'})
+      }
+    },
+    lessEqual(target,validation,value){
+      if(value > target){
+        return this.getMessage(target,{validation,be:'could not be more than'})
+      }
+    },
+    more(target,validation,value){
+      if(value <= target){
+        return this.getMessage(target,{validation,be:'should be more than'})
+      }
+    },
+    moreEqual(target,validation,value){
+      if(value < target){
+        return this.getMessage(target,{validation,be:'could not be less than'})
+      }
+    },
+    getResult(fn,target,validation,value,unit){
+      target = Array.isArray(target)?target:[target];
+      for(let i = 0; i < target.length; i++){
+        let result = this[fn](target[i],validation,value,unit)
+        if(result){return result}
+      }
+    },
+    getValidation(){
+      let {lang = 'en',value,validations = []} = props; 
+      let unit = '';
+      if(Array.isArray(value)){unit = this.translate('item(s)')}
+      else if(typeof value === 'string'){unit = this.translate('character(s)')}
+      for(let i = 0; i < validations.length; i++){
+        let {type,target,title} = validations[i];
+        let result;
+        if(type === 'required' && (value === undefined || value === '' || value === false || value.length === 0)){
+          let {title = props.title} = validations[i];
+          if(lang === 'en'){return `${title} is required`}
+          if(lang === 'en'){return `وارد کردن ${title} ضروری است`}
         }
-        else if(type === '!='){
-          if(Array.isArray(target)){
-            if(target.indexOf(value) === -1){return $$.getErrorD(value,message)}
-          }
-          else if(value !== target){return $$.getErrorC(target,'+',message)}
-        }
-        else if(type === '<'){
-          if(Array.isArray(value)){
-            if(value.length < target){return $$.getErrorA(target,'l','list',message)}
-          }
-          else if(typeof value === 'number'){
-            if(value < target){return $$.getErrorA(target,'l','number',message)}
-          }
-          else if(typeof value === 'string'){
-            if(value.indexOf('/') !== -1 && dateCalc.isLess(value,target)){return $$.getErrorA(target,'l','date',message)}
-            else if(value.length < target){return $$.getErrorA(target,'l','string',message)}
-          }
-        }
-        else if(type === '>'){
-          if(Array.isArray(value)){
-            if(value.length > target){return $$.getErrorA(target,'g','list',message)}
-          }
-          else if(typeof value === 'number'){
-            if(value > target){return $$.getErrorA(target,'g','number',message)}
-          }
-          else if(typeof value === 'string'){
-            if(value.indexOf('/') !== -1 && dateCalc.isGreater(value,target)){return $$.getErrorA(target,'g','date',message)}
-            else if(value.length > target){return $$.getErrorA(target,'g','string',message)}
-          }
-        }
-        if(typeof value === 'string'){
-          if(type === 'contain'){
-            if(target === 'symbol'){
-                let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-                if(format.test(value)){return $$.getErrorB(target,'-',message)}  
-            }
-            if(target === 'number'){
-                let format = /\d/;
-                if(format.test(value)){return $$.getErrorB(target,'-',message)}  
-            }
-            if(target === 'letter'){
-              let format = /[a-zA-Z]/;
-              if(format.test(value)){return $$.getErrorB(target,'-',message)}  
-            }
-            if(target === 'uppercase'){
-                let format = /[A-Z]/;
-                if(format.test(value)){return $$.getErrorB(target,'-',message)}  
-            }
-            if(target === 'lowercase'){
-                let format = /[a-z]/;
-                if(format.test(value)){return $$.getErrorB(target,'-',message)}  
-            }
-            if(typeof target.test === 'function'){
-              if(target.test(value)){return $$.getErrorB(target,'-',message)}  
-            }
-          }
-          if(type === 'not contain'){
-            if(target === 'symbol'){
-                let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-                if(!format.test(value)){return $$.getErrorB(target,'+',message)}  
-            }
-            if(target === 'number'){
-                let format = /\d/;
-                if(!format.test(value)){return $$.getErrorB(target,'+',message)}  
-            }
-            if(target === 'letter'){
-              let format = /[a-zA-Z]/;
-              if(!format.test(value)){return $$.getErrorB(target,'+',message)}  
-            }
-            if(target === 'uppercase'){
-                let format = /[A-Z]/;
-                if(!format.test(value)){return $$.getErrorB(target,'+',message)}  
-            }
-            if(target === 'lowercase'){
-                let format = /[a-z]/;
-                if(!format.test(value)){return $$.getErrorB(target,'+',message)}  
-            }
-            if(typeof target.test === 'function'){
-              if(!target.test(value)){return $$.getErrorB(target,'+',message)}  
-            }
-          }
-        }
+        else if(type === 'contain'){result = this.getResult('contain',target,validations[i],value)}
+        else if(type === '!contain'){result = this.getResult('notContain',target,validations[i],value)}
+        else if(type === 'length'){result = this.getResult('length',target,validations[i],value,unit)}
+        else if(type === '!length'){result = this.getResult('notLength',target,validations[i],value,unit)}
+        else if(type === 'length<'){result = this.getResult('lengthLess',target,validations[i],value,unit)}
+        else if(type === 'length<='){result = this.getResult('lengthLessEqual',target,validations[i],value,unit)}
+        else if(type === 'length>'){result = this.getResult('lengthMore',target,validations[i],value,unit)}
+        else if(type === 'length>='){result = this.getResult('lengthMoreEqual',target,validations[i],value,unit)}
+        else if(type === '='){result = this.getResult('equal',target,validations[i],value)}
+        else if(type === '!='){result = this.getResult('not',target,validations[i],value)}
+        else if(type === '<'){result = this.getResult('less',target,validations[i],value)}
+        else if(type === '<='){result = this.getResult('lessEqual',target,validations[i],value)}
+        else if(type === '>'){result = this.getResult('more',target,validations[i],value)}
+        else if(type === '>='){result = this.getResult('moreEqual',target,validations[i],value)}
+        else if(type === 'date<'){result = this.getResult('dateLess',target,validations[i],value)}
+        else if(type === 'date<='){result = this.getResult('dateLessEqual',target,validations[i],value)}
+        else if(type === 'date>'){result = this.getResult('dateMore',target,validations[i],value)}
+        else if(type === 'date>='){result = this.getResult('dateMoreEqual',target,validations[i],value)}
+        if(result){return result}
       }
       return ''
     }
@@ -239,10 +185,10 @@ export default function AIOValidation(props) {
     return text
   }
   props.lang = props.lang || 'en';
-  let error;
-  try{error = $$.getError()}
-  catch{error = ''}
-  return error; 
+  let validation;
+  try{validation = $$.getValidation()}
+  catch{validation = ''}
+  return validation; 
 }
 function DateCalculator(){
   let $$ = {
