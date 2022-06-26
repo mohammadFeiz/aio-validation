@@ -5,11 +5,20 @@ export default function AIOValidation(props) {
       if(!text){return text}
       let {lang} = props;
       let dict = {
-        'should be contain':'باید شامل','should be before':'باید قبل از','cannot be after':'نمی تواند بعد از',
-        'should be after':'باید بعد از','cannot be before':'نمی تواند قبل از','should not be contain':'نمی تواند شامل',
-        'should be less than':'باید کمتر از','should be more than':'باید بیشتر از','could not be more than':'باید کمتر یا برابر',
-        'could not be less than':'باید بیشتر یا برابر','character(s)':'کاراکتر',
-        'item(s)':'مورد','should be equal':'','cannot be equal':'نمی تواند برابر'
+        'should be contain':'باید شامل',
+        'should be before':'باید قبل از',
+        'cannot be after':'نمی تواند بعد از',
+        'should be after':'باید بعد از',
+        'cannot be before':'نمی تواند قبل از',
+        'should not be contain':'نمی تواند شامل',
+        'should be less than':'باید کمتر از',
+        'should be more than':'باید بیشتر از',
+        'could not be more than':'نباید بزرگ تر از',
+        'could not be less than':'نباید کوچک تر از',
+        'character(s)':'کاراکتر',
+        'item(s)':'مورد',
+        'should be equal':'باید برابر',
+        'cannot be equal':'نمی تواند برابر'
       }
       return lang === 'fa'?dict[text]:text
     },
@@ -151,12 +160,12 @@ export default function AIOValidation(props) {
       if(Array.isArray(value)){unit = this.translate('item(s)')}
       else if(typeof value === 'string'){unit = this.translate('character(s)')}
       for(let i = 0; i < validations.length; i++){
-        let {type,target,title} = validations[i];
+        let [type,target,params = {}] = validations[i];
         let result;
         if(type === 'required' && (value === undefined || value === '' || value === false || value.length === 0)){
-          let {title = props.title} = validations[i];
+          let {title = props.title} = params;
           if(lang === 'en'){return `${title} is required`}
-          if(lang === 'en'){return `وارد کردن ${title} ضروری است`}
+          if(lang === 'fa'){return `وارد کردن ${title} ضروری است`}
         }
         else if(type === 'contain'){result = this.getResult('contain',target,validations[i],value)}
         else if(type === '!contain'){result = this.getResult('notContain',target,validations[i],value)}

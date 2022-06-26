@@ -25,11 +25,11 @@ function AIOValidation(props) {
         'should not be contain': 'نمی تواند شامل',
         'should be less than': 'باید کمتر از',
         'should be more than': 'باید بیشتر از',
-        'could not be more than': 'باید کمتر یا برابر',
-        'could not be less than': 'باید بیشتر یا برابر',
+        'could not be more than': 'نباید بزرگ تر از',
+        'could not be less than': 'نباید کوچک تر از',
         'character(s)': 'کاراکتر',
         'item(s)': 'مورد',
-        'should be equal': '',
+        'should be equal': 'باید برابر',
         'cannot be equal': 'نمی تواند برابر'
       };
       return lang === 'fa' ? dict[text] : text;
@@ -302,23 +302,19 @@ function AIOValidation(props) {
       }
 
       for (let i = 0; i < validations.length; i++) {
-        let {
-          type,
-          target,
-          title
-        } = validations[i];
+        let [type, target, params = {}] = validations[i];
         let result;
 
         if (type === 'required' && (value === undefined || value === '' || value === false || value.length === 0)) {
           let {
             title = props.title
-          } = validations[i];
+          } = params;
 
           if (lang === 'en') {
             return `${title} is required`;
           }
 
-          if (lang === 'en') {
+          if (lang === 'fa') {
             return `وارد کردن ${title} ضروری است`;
           }
         } else if (type === 'contain') {
