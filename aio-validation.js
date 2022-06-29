@@ -162,10 +162,15 @@ export default function AIOValidation(props) {
       for(let i = 0; i < validations.length; i++){
         let [type,target,params = {}] = validations[i];
         let result;
-        if(type === 'required' && (value === undefined || value === '' || value === false || value.length === 0)){
-          let {title = props.title} = params;
-          if(lang === 'en'){return `${title} is required`}
-          if(lang === 'fa'){return `وارد کردن ${title} ضروری است`}
+        if(type === 'function'){
+          result = target(value);
+        }
+        else if(type === 'required'){
+          if(value === undefined || value === '' || value === false || value.length === 0){
+            let {title = props.title} = params;
+            if(lang === 'en'){return `${title} is required`}
+            if(lang === 'fa'){return `وارد کردن ${title} ضروری است`}
+          }
         }
         else if(type === 'contain'){result = this.getResult('contain',target,validations[i],value)}
         else if(type === '!contain'){result = this.getResult('notContain',target,validations[i],value)}
